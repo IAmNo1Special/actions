@@ -36,7 +36,10 @@ jobs:
 | `install-command` | `"uv sync"` | Dependency install command (e.g. `"uv sync --all-packages --frozen"`) |
 | `run-lint` | `true` | Whether to run the lint step |
 | `lint-commands` | ruff check + format check + mypy | Lint/typecheck commands (multiline shell) |
+| `run-tests` | `true` | Whether to run the test step |
 | `test-commands` | `uv run python -m pytest -q -p no:cacheprovider` | Test commands (multiline shell) |
+| `coverage-artifact-name` | `""` | When set, upload coverage data as an artifact with this name after tests |
+| `coverage-artifact-path` | `".coverage.*"` | Files to upload as the coverage artifact (relative to repo root) |
 | `test-env-json` | `"{}"` | JSON object of env vars for the test step, e.g. `'{"HUB_SECRET_KEY": "test-value"}'` |
 | `runs-on` | `"ubuntu-latest"` | Runner label |
 | `timeout-minutes` | `20` | Job timeout |
