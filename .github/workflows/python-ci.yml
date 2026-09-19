@@ -1,7 +1,8 @@
 # Reusable Python CI for uv-based repos.
 #
 # Shared skeleton: checkout -> setup-uv -> install Python -> install deps ->
-# lint -> test. Callers override the commands that differ per repo.
+# lint -> test (-> optional coverage artifact upload). Callers override the
+# commands that differ per repo.
 #
 # Caller example:
 #   jobs:
@@ -49,6 +50,11 @@ on:
           uv run ruff format --check .
           uv run mypy .
         type: string
+      run-tests:
+        description: "Whether to run the test step"
+        required: false
+        default: true
+        type: boolean
       test-commands:
         description: "Test commands (multiline shell)"
         required: false
@@ -58,6 +64,16 @@ on:
         description: "JSON object of env vars for the test step, e.g. '{\"FOO\": \"bar\"}'"
         required: false
         default: "{}"
+        type: string
+      coverage-artifact-name:
+        description: "When set, upload coverage data as an artifact with this name after tests"
+        required: false
+        default: ""
+        type: string
+      coverage-artifact-path:
+        description: "Files to upload as the coverage artifact (relative to repo root)"
+        required: false
+        default: ".coverage.*"
         type: string
       runs-on:
         description: "Runner label"
@@ -98,7 +114,7 @@ jobs:
         run: ${{ inputs.lint-commands }}
 
       - name: Set test environment
-        if: inputs.test-env-json != '{}'
+        if: inputs.run-tests && inputs.test-env-json != '{}'
         shell: python
         run: |
           import json, os
@@ -108,5 +124,15 @@ jobs:
                   f.write(f"{k}={v}\n")
 
       - name: Test
+        if: inputs.run-tests
         working-directory: ${{ inputs.working-directory }}
         run: ${{ inputs.test-commands }}
+
+      - name: Upload coverage data
+        if: inputs.run-tests && inputs.coverage-artifact-name != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ inputs.coverage-artifact-name }}
+          path: ${{ inputs.coverage-artifact-path }}
+          include-hidden-files: true
+          if-no-files-found: error
